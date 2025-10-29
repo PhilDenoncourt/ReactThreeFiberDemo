@@ -7,47 +7,51 @@ export default function FiberOpticCable({ path }) {
   const glowRef = useRef()
 
   useFrame((state) => {
-    // Subtle pulsing effect on the glow
+    // Very subtle pulsing effect on the glow
     if (glowRef.current) {
-      glowRef.current.material.opacity = 0.3 + Math.sin(state.clock.elapsedTime * 2) * 0.1
+      glowRef.current.material.opacity = 0.05 + Math.sin(state.clock.elapsedTime * 1.5) * 0.03
     }
   })
 
   return (
     <group>
-      {/* Main fiber core */}
-      <mesh ref={cableRef}>
-        <tubeGeometry args={[path, 64, 0.1, 8, false]} />
-        <meshPhysicalMaterial
-          color="#1a4d6d"
-          transparent
-          opacity={0.6}
-          roughness={0.1}
-          metalness={0.2}
-          transmission={0.9}
-          thickness={0.5}
-        />
-      </mesh>
-
-      {/* Outer cladding */}
-      <mesh>
+      {/* Outer cladding - very transparent to allow particles to show through */}
+      <mesh renderOrder={3}>
         <tubeGeometry args={[path, 64, 0.12, 8, false]} />
         <meshPhysicalMaterial
-          color="#2a5d8d"
+          color="#1a4d7d"
           transparent
-          opacity={0.3}
+          opacity={0.15}
           roughness={0.2}
           metalness={0.1}
+          depthWrite={false}
         />
       </mesh>
 
-      {/* Glowing inner core effect */}
-      <mesh ref={glowRef}>
+      {/* Main fiber core - highly transparent glass-like material */}
+      <mesh ref={cableRef} renderOrder={2}>
+        <tubeGeometry args={[path, 64, 0.1, 8, false]} />
+        <meshPhysicalMaterial
+          color="#b8d4e9"
+          transparent
+          opacity={0.2}
+          roughness={0.05}
+          metalness={0.0}
+          transmission={0.95}
+          thickness={0.1}
+          ior={1.46} // Index of refraction for optical fiber
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Subtle glowing inner core effect - very faint */}
+      <mesh ref={glowRef} renderOrder={1}>
         <tubeGeometry args={[path, 64, 0.08, 8, false]} />
         <meshBasicMaterial
           color="#00d4ff"
           transparent
-          opacity={0.4}
+          opacity={0.1}
+          depthWrite={false}
         />
       </mesh>
     </group>
