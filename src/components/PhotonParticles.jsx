@@ -14,6 +14,11 @@ export default function PhotonParticles({ path, count = 50, isBranch = false }) 
       offset: Math.random() * Math.PI * 2, // Random offset for variation
       size: 0.01 + Math.random() * 0.02, // Much smaller random size, similar to stars
       startDelay: isBranch ? Math.random() * 2 : 0, // Stagger branch particle starts
+      isDropped: false, // Track if particle has been dropped due to splice loss
+      dropTime: 0, // When the particle was dropped
+      scatterDirection: null, // Random direction for scattered particles
+      scatterPosition: { x: 0, y: 0, z: 0 }, // Current position when scattering
+      fadeAlpha: 1, // Opacity for fading out scattered particles
     }))
   }, [count, isBranch])
 
@@ -78,7 +83,7 @@ export default function PhotonParticles({ path, count = 50, isBranch = false }) 
       const particleY = point.y + wobble
       const particleZ = point.z + wobble
 
-      // Hide particles inside the junction box (centered at origin)
+      // Check if particle is inside the junction box (centered at origin)
       // Junction box dimensions: 1.0 x 0.7 x 0.6
       const isInsideJunctionBox = (
         Math.abs(particleX) < 0.5 && 
@@ -86,13 +91,68 @@ export default function PhotonParticles({ path, count = 50, isBranch = false }) 
         Math.abs(particleZ) < 0.3
       )
 
-      if (isInsideJunctionBox) {
-        // Hide particle by making it invisible
+      // Simulate splice loss: 1 in 1000 particles (0.1%) get dropped at the junction
+      if (isInsideJunctionBox && !particle.isDropped && !isBranch) {
+        // Only main trunk particles can be dropped (not branch particles)
+        if (Math.random() < 0.001) { // 0.1% chance (1 in 1000)
+          particle.isDropped = true
+          particle.dropTime = state.clock.elapsedTime
+          
+          // Create random scatter direction
+          const theta = Math.random() * Math.PI * 2 // Random angle around Y axis
+          const phi = Math.random() * Math.PI // Random angle from vertical
+          particle.scatterDirection = {
+            x: Math.sin(phi) * Math.cos(theta),
+            y: Math.sin(phi) * Math.sin(theta),
+            z: Math.cos(phi)
+          }
+          
+          // Start scattering from current position
+          particle.scatterPosition = {
+            x: particleX,
+            y: particleY,
+            z: particleZ
+          }
+          particle.fadeAlpha = 1
+        }
+      }
+
+      // Handle dropped particles - scatter them away
+      if (particle.isDropped) {
+        const timeElapsed = state.clock.elapsedTime - particle.dropTime
+        const scatterSpeed = 0.15
+        
+        if (timeElapsed < 2) {
+          // Particle scatters away from junction box
+          particle.scatterPosition.x += particle.scatterDirection.x * scatterSpeed * delta
+          particle.scatterPosition.y += particle.scatterDirection.y * scatterSpeed * delta
+          particle.scatterPosition.z += particle.scatterDirection.z * scatterSpeed * delta
+          
+          // Fade out as it scatters
+          particle.fadeAlpha = Math.max(0, 1 - timeElapsed / 2)
+          
+          // Position the scattered particle
+          positions[i * 3] = particle.scatterPosition.x
+          positions[i * 3 + 1] = particle.scatterPosition.y
+          positions[i * 3 + 2] = particle.scatterPosition.z
+          
+          // Shrink size as it fades
+          const fadeSize = particle.size * particle.fadeAlpha
+          sizes[i] = fadeSize
+        } else {
+          // Particle has completely faded away, respawn it
+          particle.isDropped = false
+          particle.position = 0 // Restart from beginning
+          particle.fadeAlpha = 1
+        }
+      } else if (isInsideJunctionBox) {
+        // Hide particle inside junction box (but not permanently dropped)
         positions[i * 3] = 0
         positions[i * 3 + 1] = 0
         positions[i * 3 + 2] = 0
         sizes[i] = 0
       } else {
+        // Particle is visible in fiber cable
         positions[i * 3] = particleX
         positions[i * 3 + 1] = particleY
         positions[i * 3 + 2] = particleZ
