@@ -10,7 +10,7 @@ export default function PhotonParticles({ path, count = 50, isBranch = false }) 
   const particleData = useMemo(() => {
     return Array.from({ length: count }, (_, i) => ({
       position: isBranch ? Math.random() * 0.2 : i / count, // Branches start with random positions near junction
-      speed: 0.2 + Math.random() * 0.3, // Slightly slower for better visibility
+      speed: 0.35, // Constant speed representing the speed of light
       offset: Math.random() * Math.PI * 2, // Random offset for variation
       size: 0.01 + Math.random() * 0.02, // Much smaller random size, similar to stars
       startDelay: isBranch ? Math.random() * 2 : 0, // Stagger branch particle starts
