@@ -1,195 +1,169 @@
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Stars } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, Stars, RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 import { useMemo, useState, useEffect } from 'react'
 import FiberOpticCable from './components/FiberOpticCable'
 import PhotonParticles from './components/PhotonParticles'
 
-// Reusable Server Rack Component
+// Reusable Server Rack Component - Cartoonish Style
 function ServerRack({ position = [0, 0, 0] }) {
   return (
     <group position={position}>
-      {/* Main rack chassis */}
-      <mesh>
-        <boxGeometry args={[1.2, 2.4, 0.8]} />
-        <meshStandardMaterial
-          color="#4a4a4a"
-          metalness={0.8}
-          roughness={0.3}
-          emissive="#1a1a1a"
-          emissiveIntensity={0.1}
+      {/* Main rack chassis - rounded and colorful */}
+      <RoundedBox args={[1.2, 2.4, 0.8]} radius={0.1} smoothness={4}>
+        <meshPhysicalMaterial
+          color="#3d5a78"
+          metalness={0.2}
+          roughness={0.4}
+          clearcoat={1.0}
+          clearcoatRoughness={0.05}
+          emissive="#1a2d42"
+          emissiveIntensity={0.3}
         />
-      </mesh>
+      </RoundedBox>
       
-      {/* Rack frame (left rail) */}
-      <mesh position={[-0.55, 0, 0.35]}>
-        <boxGeometry args={[0.05, 2.4, 0.1]} />
-        <meshStandardMaterial
-          color="#777777"
-          metalness={0.9}
-          roughness={0.2}
-          emissive="#2a2a2a"
-          emissiveIntensity={0.15}
+      {/* Base platform */}
+      <RoundedBox position={[0, -1.3, 0]} args={[1.4, 0.2, 1.0]} radius={0.05} smoothness={4}>
+        <meshPhysicalMaterial
+          color="#2a3d52"
+          metalness={0.3}
+          roughness={0.4}
+          clearcoat={1.0}
+          emissive="#152030"
+          emissiveIntensity={0.2}
         />
-      </mesh>
+      </RoundedBox>
       
-      {/* Rack frame (right rail) */}
-      <mesh position={[0.55, 0, 0.35]}>
-        <boxGeometry args={[0.05, 2.4, 0.1]} />
-        <meshStandardMaterial
-          color="#777777"
-          metalness={0.9}
-          roughness={0.2}
-          emissive="#2a2a2a"
-          emissiveIntensity={0.15}
-        />
-      </mesh>
-      
-      {/* Server units (1U servers) */}
-      {[...Array(12)].map((_, i) => {
-        const yPos = 1.0 - (i * 0.18)
+      {/* Server units (4 larger units instead of 12 small ones) */}
+      {[...Array(4)].map((_, i) => {
+        const yPos = 0.6 - (i * 0.4)
+        const colors = ['#4a6b8a', '#4a6b8a', '#6b8aa4', '#4a6b8a']
+        const ledColors = [
+          { primary: '#00a8ff', secondary: '#00ff88' },
+          { primary: '#00a8ff', secondary: '#00ff88' },  
+          { primary: '#ff6b35', secondary: '#00ff88' },
+          { primary: '#00a8ff', secondary: '#ff4757' }
+        ]
+        
         return (
           <group key={i} position={[0, yPos, 0.1]}>
-            {/* Server body */}
-            <mesh>
-              <boxGeometry args={[1.0, 0.15, 0.6]} />
-              <meshStandardMaterial
-                color={i % 2 === 0 ? "#3a3a3a" : "#4a4a4a"}
-                metalness={0.7}
-                roughness={0.4}
-                emissive={i % 2 === 0 ? "#151515" : "#1a1a1a"}
-                emissiveIntensity={0.1}
+            {/* Server body - rounded */}
+            <RoundedBox args={[1.0, 0.3, 0.6]} radius={0.05} smoothness={4}>
+              <meshPhysicalMaterial
+                color={colors[i]}
+                metalness={0.1}
+                roughness={0.5}
+                clearcoat={1.0}
+                clearcoatRoughness={0.1}
+                emissive={colors[i]}
+                emissiveIntensity={0.2}
+              />
+            </RoundedBox>
+            
+            {/* Server front panel - inset design */}
+            <RoundedBox position={[0, 0, 0.31]} args={[0.95, 0.25, 0.02]} radius={0.02} smoothness={4}>
+              <meshPhysicalMaterial
+                color="#5a7a95"
+                metalness={0.05}
+                roughness={0.6}
+                clearcoat={0.8}
+                emissive="#2a3d52"
+                emissiveIntensity={0.3}
+              />
+            </RoundedBox>
+            
+            {/* Large colorful status LEDs */}
+            <mesh position={[-0.35, 0.05, 0.32]}>
+              <sphereGeometry args={[0.035]} />
+              <meshPhysicalMaterial
+                color={ledColors[i].primary}
+                emissive={ledColors[i].primary}
+                emissiveIntensity={1.5}
+                roughness={0.0}
+                metalness={0.0}
+                transmission={0.2}
               />
             </mesh>
             
-            {/* Server bezel/front panel */}
-            <mesh position={[0, 0, 0.31]}>
-              <boxGeometry args={[0.98, 0.13, 0.02]} />
-              <meshStandardMaterial
-                color="#555555"
-                metalness={0.6}
-                roughness={0.3}
-                emissive="#222222"
-                emissiveIntensity={0.15}
+            <mesh position={[-0.35, -0.05, 0.32]}>
+              <sphereGeometry args={[0.03]} />
+              <meshPhysicalMaterial
+                color={ledColors[i].secondary}
+                emissive={ledColors[i].secondary}
+                emissiveIntensity={1.2}
+                roughness={0.0}
+                metalness={0.0}
+                transmission={0.2}
               />
             </mesh>
             
-            {/* Status LEDs */}
-            <mesh position={[-0.4, 0, 0.32]}>
-              <sphereGeometry args={[0.01]} />
-              <meshStandardMaterial
-                color={i < 8 ? "#00ff00" : "#ff0000"}
-                emissive={i < 8 ? "#004400" : "#440000"}
-                emissiveIntensity={0.8}
-              />
-            </mesh>
-            
-            <mesh position={[-0.35, 0, 0.32]}>
-              <sphereGeometry args={[0.01]} />
-              <meshStandardMaterial
-                color="#0088ff"
-                emissive="#002244"
-                emissiveIntensity={0.6}
-              />
-            </mesh>
-            
-            {/* Ventilation grilles */}
-            {[...Array(8)].map((_, j) => (
-              <mesh key={j} position={[0.1 + (j * 0.08), 0, 0.32]}>
-                <boxGeometry args={[0.03, 0.08, 0.005]} />
-                <meshStandardMaterial
-                  color="#000000"
-                  metalness={0.8}
-                  roughness={0.9}
+            {/* Decorative ventilation strips */}
+            {[...Array(6)].map((_, j) => (
+              <RoundedBox key={j} position={[-0.1 + (j * 0.1), 0, 0.32]} args={[0.06, 0.15, 0.005]} radius={0.01} smoothness={2}>
+                <meshPhysicalMaterial
+                  color="#2a3d52"
+                  metalness={0.4}
+                  roughness={0.3}
+                  emissive="#0a1117"
+                  emissiveIntensity={0.5}
                 />
-              </mesh>
+              </RoundedBox>
             ))}
             
-            {/* Network ports (fiber optic connections) */}
-            {i < 4 && (
+            {/* Modern rectangular ports */}
+            {i < 2 && (
               <>
-                <mesh position={[-0.45, 0.03, 0.32]}>
-                  <cylinderGeometry args={[0.015, 0.015, 0.02]} />
-                  <meshStandardMaterial
-                    color="#444444"
-                    metalness={0.7}
-                    roughness={0.3}
+                <RoundedBox position={[0.35, 0.05, 0.32]} args={[0.08, 0.03, 0.01]} radius={0.005} smoothness={2}>
+                  <meshPhysicalMaterial
+                    color="#1a1a1a"
+                    metalness={0.8}
+                    roughness={0.2}
                   />
-                </mesh>
-                <mesh position={[-0.45, -0.03, 0.32]}>
-                  <cylinderGeometry args={[0.015, 0.015, 0.02]} />
-                  <meshStandardMaterial
-                    color="#444444"
-                    metalness={0.7}
-                    roughness={0.3}
+                </RoundedBox>
+                <RoundedBox position={[0.35, -0.05, 0.32]} args={[0.08, 0.03, 0.01]} radius={0.005} smoothness={2}>
+                  <meshPhysicalMaterial
+                    color="#1a1a1a"
+                    metalness={0.8}
+                    roughness={0.2}
                   />
-                </mesh>
+                </RoundedBox>
               </>
             )}
           </group>
         )
       })}
       
-      {/* Rack mounting holes */}
-      {[...Array(24)].map((_, i) => {
-        const yPos = 1.15 - (i * 0.09)
+      {/* Stylized top section with fiber connections */}
+      <RoundedBox position={[0, 1.1, 0.1]} args={[1.0, 0.4, 0.6]} radius={0.05} smoothness={4}>
+        <meshPhysicalMaterial
+          color="#4a6b8a"
+          metalness={0.2}
+          roughness={0.4}
+          clearcoat={1.0}
+          clearcoatRoughness={0.05}
+          emissive="#1a2d42"
+          emissiveIntensity={0.4}
+        />
+      </RoundedBox>
+      
+      {/* Colorful fiber optic connection indicators */}
+      {[...Array(6)].map((_, i) => {
+        const colors = ['#00a8ff', '#00ff88', '#ff6b35', '#00a8ff', '#ff4757', '#00ff88']
         return (
-          <group key={i}>
-            <mesh position={[-0.52, yPos, 0.35]}>
-              <cylinderGeometry args={[0.01, 0.01, 0.12]} />
-              <meshStandardMaterial
-                color="#000000"
-                metalness={0.9}
-                roughness={0.1}
-              />
-            </mesh>
-            <mesh position={[0.52, yPos, 0.35]}>
-              <cylinderGeometry args={[0.01, 0.01, 0.12]} />
-              <meshStandardMaterial
-                color="#000000"
-                metalness={0.9}
-                roughness={0.1}
-              />
-            </mesh>
-          </group>
+          <mesh key={i} position={[-0.25 + (i * 0.1), 1.1, 0.41]}>
+            <sphereGeometry args={[0.025]} />
+            <meshPhysicalMaterial
+              color={colors[i]}
+              emissive={colors[i]}
+              emissiveIntensity={2.0}
+              roughness={0.0}
+              metalness={0.0}
+              transmission={0.2}
+              ior={1.4}
+            />
+          </mesh>
         )
       })}
-      
-      {/* Cable management tray */}
-      <mesh position={[0, -1.3, 0]}>
-        <boxGeometry args={[1.0, 0.1, 0.6]} />
-        <meshStandardMaterial
-          color="#666666"
-          metalness={0.6}
-          roughness={0.4}
-          emissive="#222222"
-          emissiveIntensity={0.1}
-        />
-      </mesh>
-      
-      {/* Network switch (top unit with fiber connections) */}
-      <mesh position={[0, 1.3, 0.1]}>
-        <boxGeometry args={[1.0, 0.2, 0.6]} />
-        <meshStandardMaterial
-          color="#2a2a4e"
-          metalness={0.8}
-          roughness={0.2}
-          emissive="#1a1a2e"
-          emissiveIntensity={0.2}
-        />
-      </mesh>
-      
-      {/* Fiber optic patch panel indicators */}
-      {[...Array(6)].map((_, i) => (
-        <mesh key={i} position={[-0.3 + (i * 0.12), 1.3, 0.41]}>
-          <sphereGeometry args={[0.015]} />
-          <meshStandardMaterial
-            color="#00ffff"
-            emissive="#003333"
-            emissiveIntensity={0.6}
-          />
-        </mesh>
-      ))}
     </group>
   )
 }
