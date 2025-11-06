@@ -3,14 +3,14 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 export default function PhotonParticles({ path, count = 50, isBranch = false, hasNoise = false, hasColorfulPhotons = false }) {
-  const pointsRef = useRef()
-  const particlesRef = useRef()
+  const groupRef = useRef()
+  const particlesRef = useRef([])
 
   // Initialize particle data
   const particleData = useMemo(() => {
     return Array.from({ length: count }, (_, i) => ({
       position: isBranch ? Math.random() * 0.2 : i / count, // Branches start with random positions near junction
-      speed: 0.35, // Constant speed representing the speed of light
+      speed: 0.75, // Faster speed for more dynamic flow
       offset: Math.random() * Math.PI * 2, // Random offset for variation
       size: 0.03 + Math.random() * 0.04, // Larger random size for better visibility
       startDelay: isBranch ? Math.random() * 2 : 0, // Stagger branch particle starts
@@ -29,52 +29,33 @@ export default function PhotonParticles({ path, count = 50, isBranch = false, ha
     }))
   }, [count, isBranch])
 
-  // Create geometry for particles
-  const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry()
-    const positions = new Float32Array(count * 3)
-    const sizes = new Float32Array(count)
-    const colors = new Float32Array(count * 3)
-
-    particleData.forEach((particle, i) => {
-      sizes[i] = particle.size
-
-      // Color variation based on hasColorfulPhotons setting
+  // Create particle colors
+  const particleColors = useMemo(() => {
+    return particleData.map(() => {
       const color = new THREE.Color()
       if (hasColorfulPhotons) {
         // Random rainbow colors
         color.setHSL(Math.random(), 0.8 + Math.random() * 0.2, 0.4 + Math.random() * 0.4)
       } else {
-        // Traditional yellow to dark yellow (amber) fiber optic colors
-        color.setHSL(0.15 + Math.random() * 0.02, 1, 0.2 + Math.random() * 0.4)
+        // Dark ruby red - consistent color for all particles
+        color.setHSL(0.0, 0.9, 0.25)
       }
-      colors[i * 3] = color.r
-      colors[i * 3 + 1] = color.g
-      colors[i * 3 + 2] = color.b
+      return color
     })
-
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1))
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-
-    return geo
-  }, [count, particleData, hasColorfulPhotons])
+  }, [particleData, hasColorfulPhotons])
 
   useFrame((state, delta) => {
-    if (!pointsRef.current || !particlesRef.current) return
-
-    const positions = pointsRef.current.geometry.attributes.position.array
-    const sizes = pointsRef.current.geometry.attributes.size.array
+    if (!groupRef.current) return
 
     particleData.forEach((particle, i) => {
+      const sphereMesh = particlesRef.current[i]
+      if (!sphereMesh) return
+
       // Handle start delay for branch particles
       if (particle.startDelay > 0) {
         particle.startDelay -= delta
         // Hide particle during delay
-        positions[i * 3] = 0
-        positions[i * 3 + 1] = 0
-        positions[i * 3 + 2] = 0
-        sizes[i] = 0
+        sphereMesh.visible = false
         return
       }
 
@@ -176,13 +157,22 @@ export default function PhotonParticles({ path, count = 50, isBranch = false, ha
           particle.fadeAlpha = Math.max(0, 1 - timeElapsed / 2)
           
           // Position the scattered particle
-          positions[i * 3] = particle.scatterPosition.x
-          positions[i * 3 + 1] = particle.scatterPosition.y
-          positions[i * 3 + 2] = particle.scatterPosition.z
+          sphereMesh.visible = true
+          sphereMesh.position.set(
+            particle.scatterPosition.x,
+            particle.scatterPosition.y,
+            particle.scatterPosition.z
+          )
           
           // Shrink size as it fades
-          const fadeSize = particle.size * particle.fadeAlpha
-          sizes[i] = fadeSize
+          const fadeScale = particle.fadeAlpha
+          sphereMesh.scale.setScalar(fadeScale)
+          
+          // Update opacity and transmission
+          if (sphereMesh.material) {
+            sphereMesh.material.opacity = particle.fadeAlpha * 0.4
+            sphereMesh.material.transmission = particle.fadeAlpha * 0.8
+          }
         } else {
           // Particle has completely faded away, respawn it
           particle.isDropped = false
@@ -191,44 +181,58 @@ export default function PhotonParticles({ path, count = 50, isBranch = false, ha
         }
       } else if (isInsideJunctionBox) {
         // Hide particle inside junction box (but not permanently dropped)
-        positions[i * 3] = 0
-        positions[i * 3 + 1] = 0
-        positions[i * 3 + 2] = 0
-        sizes[i] = 0
+        sphereMesh.visible = false
       } else {
         // Particle is visible in fiber cable
-        positions[i * 3] = particleX
-        positions[i * 3 + 1] = particleY
-        positions[i * 3 + 2] = particleZ
-      }
-
-      // Only update size if particle is not hidden
-      if (!isInsideJunctionBox) {
+        sphereMesh.visible = true
+        sphereMesh.position.set(particleX, particleY, particleZ)
+        
         // Pulse size with slightly different frequency for branches
         const frequency = isBranch ? 4 : 3
         const pulseSize = particle.size * (1 + Math.sin(state.clock.elapsedTime * frequency + particle.offset) * 0.3)
-        sizes[i] = pulseSize
+        const scale = pulseSize / particle.size
+        sphereMesh.scale.setScalar(scale)
+        
+        // Update opacity for fading effects
+        if (sphereMesh.material) {
+          sphereMesh.material.opacity = particle.fadeAlpha * 0.4
+          sphereMesh.material.transmission = particle.fadeAlpha * 0.8
+        }
       }
     })
-
-    pointsRef.current.geometry.attributes.position.needsUpdate = true
-    pointsRef.current.geometry.attributes.size.needsUpdate = true
   })
 
   return (
-    <points ref={pointsRef} renderOrder={5}>
-      <bufferGeometry attach="geometry" {...geometry} />
-      <pointsMaterial
-        ref={particlesRef}
-        size={0.12}
-        vertexColors
-        transparent
-        opacity={0.7}
-        sizeAttenuation
-        blending={THREE.NormalBlending}
-        depthWrite={false}
-        depthTest={false}
-      />
-    </points>
+    <group ref={groupRef}>
+      {particleData.map((particle, i) => (
+        <mesh
+          key={i}
+          ref={(ref) => {
+            if (ref) particlesRef.current[i] = ref
+          }}
+          renderOrder={5}
+        >
+          <sphereGeometry args={[particle.size, 8, 6]} />
+          <meshPhysicalMaterial
+            color={particleColors[i]}
+            transparent
+            opacity={0.4}
+            transmission={0.8}
+            thickness={0.3}
+            roughness={0.0}
+            metalness={0.1}
+            reflectivity={1.0}
+            ior={1.8}
+            iridescence={1.0}
+            iridescenceIOR={1.5}
+            iridescenceThicknessRange={[200, 1000]}
+            clearcoat={1.0}
+            clearcoatRoughness={0.0}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+    </group>
   )
 }

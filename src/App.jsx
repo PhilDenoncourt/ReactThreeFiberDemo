@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Stars } from '@react-three/drei'
 import * as THREE from 'three'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import FiberOpticCable from './components/FiberOpticCable'
 import PhotonParticles from './components/PhotonParticles'
 
@@ -323,10 +323,10 @@ function Scene({ hasNoise, hasColorfulPhotons }) {
       <ServerRack position={[6, 0, -1.5]} />   {/* Right rack */}
 
       {/* Photon Particles flowing bidirectionally between racks */}
-      <PhotonParticles path={fiberPaths.leftToCenter} count={80} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
-      <PhotonParticles path={fiberPaths.centerToLeft} count={80} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
-      <PhotonParticles path={fiberPaths.centerToRight} count={80} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
-      <PhotonParticles path={fiberPaths.rightToCenter} count={80} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
+      <PhotonParticles path={fiberPaths.leftToCenter} count={25} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
+      <PhotonParticles path={fiberPaths.centerToLeft} count={25} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
+      <PhotonParticles path={fiberPaths.centerToRight} count={25} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
+      <PhotonParticles path={fiberPaths.rightToCenter} count={25} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
     </>
   )
 }
@@ -334,6 +334,21 @@ function Scene({ hasNoise, hasColorfulPhotons }) {
 export default function App() {
   const [hasNoise, setHasNoise] = useState(false)
   const [hasColorfulPhotons, setHasColorfulPhotons] = useState(false)
+  const [showColorfulPhotonsOption, setShowColorfulPhotonsOption] = useState(false)
+
+  // Keyboard event handler for 'C' key
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key.toLowerCase() === 'c') {
+        setShowColorfulPhotonsOption(prev => !prev)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [])
 
   return (
     <>
@@ -379,22 +394,24 @@ export default function App() {
             <span>Enable Fiber Noise/Interference</span>
           </label>
           
-          {/* Colorful Photons Control */}
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}>
-            <input
-              type="checkbox"
-              checked={hasColorfulPhotons}
-              onChange={(e) => setHasColorfulPhotons(e.target.checked)}
-              style={{ transform: 'scale(1.2)' }}
-            />
-            <span>Colorful Photons</span>
-          </label>
+          {/* Colorful Photons Control - Hidden by default, shown when 'C' is pressed */}
+          {showColorfulPhotonsOption && (
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}>
+              <input
+                type="checkbox"
+                checked={hasColorfulPhotons}
+                onChange={(e) => setHasColorfulPhotons(e.target.checked)}
+                style={{ transform: 'scale(1.2)' }}
+              />
+              <span>Colorful Photons</span>
+            </label>
+          )}
           
           <p style={{ 
             fontSize: '12px', 
@@ -406,10 +423,11 @@ export default function App() {
               ? "Noise: Photons follow jagged paths indicating signal interference. "
               : "Noise: Photons flow smoothly along the ideal fiber optic path. "
             }
-            {hasColorfulPhotons 
-              ? "Colors: Random rainbow photon colors."
-              : "Colors: Traditional yellow/amber fiber optic photons."
-            }
+            {showColorfulPhotonsOption && (
+              hasColorfulPhotons 
+                ? "Colors: Random rainbow photon colors."
+                : "Colors: Dark ruby red photons."
+            )}
           </p>
         </div>
         
