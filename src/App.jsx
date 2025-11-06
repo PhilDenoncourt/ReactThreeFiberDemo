@@ -199,34 +199,34 @@ function Scene({ hasNoise, hasColorfulPhotons }) {
   const fiberPaths = useMemo(() => {
     // Connection from left rack to center rack
     const leftToCenter = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-6, 0.2, 1.5), // Left rack
-      new THREE.Vector3(-4, 0.4, 1),
-      new THREE.Vector3(-2, 0.3, 0.5),
-      new THREE.Vector3(0, 0.1, 0), // Central rack
+      new THREE.Vector3(-6, 0.2, 1.8), // Left rack - moved back slightly
+      new THREE.Vector3(-4, 0.4, 1.2),
+      new THREE.Vector3(-2, 0.3, 0.6),
+      new THREE.Vector3(-0.3, 0.1, 0.3), // Central rack - offset left side
     ])
 
     // Connection from center rack to left rack  
     const centerToLeft = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, -0.1, 0), // Central rack
-      new THREE.Vector3(-2, 0.1, 0.3),
-      new THREE.Vector3(-4, 0.2, 0.8),
-      new THREE.Vector3(-6, -0.2, 1.5), // Left rack
+      new THREE.Vector3(-0.3, -0.4, -0.3), // Central rack - moved down
+      new THREE.Vector3(-2, -0.2, 0.0),
+      new THREE.Vector3(-4, -0.1, 0.5),
+      new THREE.Vector3(-6, -0.5, 1.2), // Left rack - moved down
     ])
 
     // Connection from center rack to right rack
     const centerToRight = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0.1, 0), // Central rack
-      new THREE.Vector3(2, 0.3, -0.3),
-      new THREE.Vector3(4, 0.2, -0.8),
-      new THREE.Vector3(6, 0.2, -1.5), // Right rack
+      new THREE.Vector3(0.3, -0.2, 0.3), // Central rack - moved down
+      new THREE.Vector3(2, 0.0, -0.0),
+      new THREE.Vector3(4, -0.1, -0.5),
+      new THREE.Vector3(6, -0.1, -1.2), // Right rack - moved down
     ])
 
     // Connection from right rack to center rack
     const rightToCenter = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(6, -0.2, -1.5), // Right rack
-      new THREE.Vector3(4, 0.4, -1),
-      new THREE.Vector3(2, 0.1, -0.5),
-      new THREE.Vector3(0, -0.1, 0), // Central rack
+      new THREE.Vector3(6, -0.2, -1.8), // Right rack - moved back slightly
+      new THREE.Vector3(4, 0.4, -1.2),
+      new THREE.Vector3(2, 0.1, -0.6),
+      new THREE.Vector3(0.3, -0.1, -0.3), // Central rack - offset right side, moved forward
     ])
 
     return {

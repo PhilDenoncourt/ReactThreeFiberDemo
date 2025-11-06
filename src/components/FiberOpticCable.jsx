@@ -17,7 +17,7 @@ export default function FiberOpticCable({ path }) {
     <group>
       {/* Outer cladding - very transparent to allow particles to show through */}
       <mesh renderOrder={3}>
-        <tubeGeometry args={[path, 64, 0.12, 8, false]} />
+        <tubeGeometry args={[path, 64, 0.24, 8, false]} />
         <meshPhysicalMaterial
           color="#1a4d7d"
           transparent
@@ -30,7 +30,7 @@ export default function FiberOpticCable({ path }) {
 
       {/* Main fiber core - highly transparent glass-like material */}
       <mesh ref={cableRef} renderOrder={2}>
-        <tubeGeometry args={[path, 64, 0.1, 8, false]} />
+        <tubeGeometry args={[path, 64, 0.2, 8, false]} />
         <meshPhysicalMaterial
           color="#b8d4e9"
           transparent
@@ -46,7 +46,7 @@ export default function FiberOpticCable({ path }) {
 
       {/* Subtle glowing inner core effect - very faint */}
       <mesh ref={glowRef} renderOrder={1}>
-        <tubeGeometry args={[path, 64, 0.08, 8, false]} />
+        <tubeGeometry args={[path, 64, 0.16, 8, false]} />
         <meshBasicMaterial
           color="#00d4ff"
           transparent
