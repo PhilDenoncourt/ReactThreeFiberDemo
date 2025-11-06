@@ -9,10 +9,10 @@ export default function PhotonParticles({ path, count = 50, isBranch = false, ha
   // Initialize particle data
   const particleData = useMemo(() => {
     return Array.from({ length: count }, (_, i) => ({
-      position: isBranch ? Math.random() * 0.2 : i / count, // Branches start with random positions near junction
-      speed: 0.75, // Faster speed for more dynamic flow
+      position: Math.random(), // All particles start at random positions along the path
+      speed: 0.7 + Math.random() * 0.1, // Slight speed variation to prevent bunching
       offset: Math.random() * Math.PI * 2, // Random offset for variation
-      size: 0.03 + Math.random() * 0.04, // Larger random size for better visibility
+      size: 0.2, // Double the size - larger consistent particles
       startDelay: isBranch ? Math.random() * 2 : 0, // Stagger branch particle starts
       isDropped: false, // Track if particle has been dropped due to splice loss
       dropTime: 0, // When the particle was dropped
@@ -164,9 +164,8 @@ export default function PhotonParticles({ path, count = 50, isBranch = false, ha
             particle.scatterPosition.z
           )
           
-          // Shrink size as it fades
-          const fadeScale = particle.fadeAlpha
-          sphereMesh.scale.setScalar(fadeScale)
+          // Keep consistent size even when fading
+          sphereMesh.scale.setScalar(1.0)
           
           // Update opacity and transmission
           if (sphereMesh.material) {
@@ -187,11 +186,8 @@ export default function PhotonParticles({ path, count = 50, isBranch = false, ha
         sphereMesh.visible = true
         sphereMesh.position.set(particleX, particleY, particleZ)
         
-        // Pulse size with slightly different frequency for branches
-        const frequency = isBranch ? 4 : 3
-        const pulseSize = particle.size * (1 + Math.sin(state.clock.elapsedTime * frequency + particle.offset) * 0.3)
-        const scale = pulseSize / particle.size
-        sphereMesh.scale.setScalar(scale)
+        // Keep consistent size - no pulsing
+        sphereMesh.scale.setScalar(1.0)
         
         // Update opacity for fading effects
         if (sphereMesh.material) {

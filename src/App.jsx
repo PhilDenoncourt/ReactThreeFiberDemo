@@ -285,11 +285,11 @@ function Scene({ hasNoise, hasColorfulPhotons }) {
 
       {/* Background stars removed for white background */}
 
-      {/* Bidirectional Fiber Optic Cable System */}
-      <FiberOpticCable path={fiberPaths.leftToCenter} />
+      {/* Bidirectional Fiber Optic Cable System - Hidden to reduce visual confusion */}
+      {/* <FiberOpticCable path={fiberPaths.leftToCenter} />
       <FiberOpticCable path={fiberPaths.centerToLeft} />
       <FiberOpticCable path={fiberPaths.centerToRight} />
-      <FiberOpticCable path={fiberPaths.rightToCenter} />
+      <FiberOpticCable path={fiberPaths.rightToCenter} /> */}
 
       {/* Three Server Racks */}
       <ServerRack position={[0, 0, 0]} />      {/* Central rack */}
@@ -297,10 +297,10 @@ function Scene({ hasNoise, hasColorfulPhotons }) {
       <ServerRack position={[6, 0, -1.5]} />   {/* Right rack */}
 
       {/* Photon Particles flowing bidirectionally between racks */}
-      <PhotonParticles path={fiberPaths.leftToCenter} count={25} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
-      <PhotonParticles path={fiberPaths.centerToLeft} count={25} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
-      <PhotonParticles path={fiberPaths.centerToRight} count={25} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
-      <PhotonParticles path={fiberPaths.rightToCenter} count={25} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
+      <PhotonParticles path={fiberPaths.leftToCenter} count={6} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
+      <PhotonParticles path={fiberPaths.centerToLeft} count={6} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
+      <PhotonParticles path={fiberPaths.centerToRight} count={6} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
+      <PhotonParticles path={fiberPaths.rightToCenter} count={6} isBranch={true} hasNoise={hasNoise} hasColorfulPhotons={hasColorfulPhotons} />
     </>
   )
 }
@@ -329,12 +329,12 @@ export default function App() {
       <div className="info-panel">
         <h1>Data Center Fiber Network</h1>
         <p>
-          This demo showcases photon flow through a fiber optic network connecting three server racks in a data center environment using React Three Fiber.
+          This demo showcases photon flow through an invisible fiber optic network connecting three server racks in a data center environment using React Three Fiber.
         </p>
         <p><strong>Features:</strong></p>
         <ul>
           <li>Three realistic 3D server racks</li>
-          <li>Inter-rack fiber optic connections</li>
+          <li>Invisible fiber optic network paths</li>
           <li>Animated photon particles showing data flow</li>
           <li>Server units with status LEDs and network ports</li>
           <li>Interactive camera controls</li>
